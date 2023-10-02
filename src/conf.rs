@@ -1,7 +1,10 @@
-use confy::ConfyError;
-use serde::{Deserialize, Serialize};
+use figment::{
+    providers::{Format, Toml},
+    Figment,
+};
+use serde::Deserialize;
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Deserialize)]
 pub struct Config {
     pub wires_x_log: String,
     pub write_log: String,
@@ -9,9 +12,8 @@ pub struct Config {
     pub max_log_size: usize,
 }
 
-pub fn load_conf() -> Result<Config, ConfyError> {
-    let cfg: Config = confy::load("wiresx_dashboard_companion", "conf")?;
-    println!("{:?}", confy::get_configuration_file_path("wiresx_dashboard_companion", "conf"));
-    println!("{:#?}", cfg);
-    Ok(cfg)
+impl Config {
+    pub fn load() -> figment::error::Result<Config> {
+        Figment::new().merge(Toml::file("conf.toml")).extract()
+    }
 }

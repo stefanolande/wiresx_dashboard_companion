@@ -7,6 +7,7 @@ use chrono::NaiveDateTime;
 use csv::{ReaderBuilder, WriterBuilder};
 use tokio::time::sleep;
 
+use crate::conf::Config;
 use wiresx_csv::Record;
 
 mod conf;
@@ -14,7 +15,7 @@ mod wiresx_csv;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let cfg = conf::load_conf()?;
+    let cfg = Config::load()?;
 
     let mut lines: BTreeMap<NaiveDateTime, Record> = BTreeMap::new();
 
@@ -29,7 +30,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
 
         write_csv_file(&cfg.write_log, &lines).await?;
-
 
         // Sleep for 1 second
         sleep(Duration::from_secs(cfg.refres_interval as u64)).await;
@@ -60,9 +60,14 @@ async fn read_csv_file<'a>(
     Ok(lines)
 }
 
-async fn write_csv_file(file_path: &str,
-                        lines: &BTreeMap<NaiveDateTime, Record>) -> Result<(), Box<dyn Error>> {
-    let mut writer = WriterBuilder::new().delimiter(b'%').has_headers(false).from_path(file_path)?;
+async fn write_csv_file(
+    file_path: &str,
+    lines: &BTreeMap<NaiveDateTime, Record>,
+) -> Result<(), Box<dyn Error>> {
+    let mut writer = WriterBuilder::new()
+        .delimiter(b'%')
+        .has_headers(false)
+        .from_path(file_path)?;
     for (_, value) in lines.iter() {
         writer.serialize(value)?;
     }

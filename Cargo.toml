@@ -8,4 +8,9 @@ tokio = { version = "1", features = ["full"] }
 csv = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version =  "0.4.31",features = ["serde"]  }
-confy = "0.5.1"
+figment = { version = "0.10", features = ["toml"] }
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = "thin"
