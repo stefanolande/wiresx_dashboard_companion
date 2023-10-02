@@ -19,15 +19,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut lines: BTreeMap<NaiveDateTime, Record> = BTreeMap::new();
 
+    println!("Wires-X Dashboard Companion started");
+
     loop {
         // Read the CSV file every 1 second
         read_csv_file(&cfg.wires_x_log, &mut lines).await?;
 
         trim_map_to_last_n(&mut lines, cfg.max_log_size);
-
-        for (key, value) in lines.iter() {
-            println!("{}: {:?}", key, value);
-        }
 
         write_csv_file(&cfg.write_log, &lines).await?;
 

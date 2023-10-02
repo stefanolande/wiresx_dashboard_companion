@@ -16,6 +16,16 @@ where
     s.serialize_str(&ndt.format("%Y/%m/%d %H:%M:%S").to_string())
 }
 
+
+fn location_to_str<S>(location: &String, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+{
+    // Remove double quotations from the location string and serialize it
+    let location_without_quotes = location.replace("\"", "");
+    s.serialize_str(&location_without_quotes)
+}
+
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Record {
     callsign: String,
@@ -27,5 +37,10 @@ pub struct Record {
     )]
     pub(crate) datetime: NaiveDateTime,
     port: String,
+    unused: String,
+    #[serde(
+    serialize_with = "location_to_str"
+    )]
     location: String,
+    other: String
 }
