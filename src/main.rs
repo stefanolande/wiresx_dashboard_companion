@@ -1,10 +1,14 @@
+#![windows_subsystem = "windows"]
+
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
+use std::sync::mpsc;
 use std::{thread, time};
 
 use chrono::NaiveDateTime;
+use tray_item::{IconSource, TrayItem};
 
 use wiresx_csv::Record;
 
@@ -13,9 +17,30 @@ use crate::conf::Config;
 mod conf;
 mod wiresx_csv;
 
+enum Message {
+    Quit,
+}
+
 fn main() {
     let cfg = Config::load().unwrap();
     let mut lines: BTreeMap<NaiveDateTime, Record> = BTreeMap::new();
+
+    let mut tray = TrayItem::new(
+        "Wires-X Dashboard Companion",
+        IconSource::Resource("aa-exe-icon"),
+    )
+    .unwrap();
+
+    tray.add_label("Wires-X Dashboard Companion").unwrap();
+    tray.inner_mut().add_separator().unwrap();
+
+    let (tx, rx) = mpsc::sync_channel(1);
+
+    let quit_tx = tx.clone();
+    tray.add_menu_item("Quit", move || {
+        quit_tx.send(Message::Quit).unwrap();
+    })
+    .unwrap();
 
     println!("Wires-X Dashboard Companion started");
 
@@ -24,6 +49,14 @@ fn main() {
         trim_map_to_last_n(&mut lines, cfg.max_log_size);
         write_csv_file(&cfg.write_log, &lines).unwrap();
         thread::sleep(time::Duration::from_secs(cfg.refres_interval as u64));
+
+        match rx.recv() {
+            Ok(Message::Quit) => {
+                println!("Quit");
+                break;
+            }
+            _ => {}
+        }
     }
 }
 
