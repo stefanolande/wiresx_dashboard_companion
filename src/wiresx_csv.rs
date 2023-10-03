@@ -1,46 +1,42 @@
+use std::error::Error;
+
 use chrono::NaiveDateTime;
-use serde::{de, Deserialize, Deserializer, Serializer};
 
-fn naive_date_time_from_str<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s: String = Deserialize::deserialize(deserializer)?;
-    NaiveDateTime::parse_from_str(&s, "%Y/%m/%d %H:%M:%S").map_err(de::Error::custom)
-}
-
-fn naive_date_time_to_str<S>(ndt: &NaiveDateTime, s: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    s.serialize_str(&ndt.format("%Y/%m/%d %H:%M:%S").to_string())
-}
-
-
-fn location_to_str<S>(location: &String, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-{
-    // Remove double quotations from the location string and serialize it
-    let location_without_quotes = location.replace("\"", "");
-    s.serialize_str(&location_without_quotes)
-}
-
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Debug)]
 pub struct Record {
-    callsign: String,
-    serial: String,
-    name: String,
-    #[serde(
-        deserialize_with = "naive_date_time_from_str",
-        serialize_with = "naive_date_time_to_str"
-    )]
-    pub(crate) datetime: NaiveDateTime,
-    port: String,
-    unused: String,
-    #[serde(
-    serialize_with = "location_to_str"
-    )]
-    location: String,
-    other: String
+    pub callsign: String,
+    pub serial: String,
+    pub name: String,
+    pub datetime: NaiveDateTime,
+    pub port: String,
+    pub location: String,
+}
+
+const DATETIME_FORMAT: &'static str = "%Y/%m/%d %H:%M:%S";
+
+impl Record {
+    pub fn from(parts: &Vec<&str>) -> Result<Record, Box<dyn Error>> {
+        Ok(Record {
+            callsign: parts[0].parse().unwrap(),
+            serial: parts[1].parse().unwrap(),
+            name: parts[2].parse().unwrap(),
+            datetime: NaiveDateTime::parse_from_str(parts[3], "%Y/%m/%d %H:%M:%S")?,
+            port: parts[4].parse().unwrap(),
+            location: parts[6].parse().unwrap(),
+        })
+    }
+
+    pub fn to_string(&self, sep: &str) -> String {
+        [
+            &self.callsign,
+            &self.serial,
+            &self.name,
+            &self.datetime.format(DATETIME_FORMAT).to_string(),
+            &self.port,
+            "",
+            &self.location,
+            "",
+        ]
+        .join(sep)
+    }
 }
