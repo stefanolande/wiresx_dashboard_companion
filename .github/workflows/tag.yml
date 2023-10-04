@@ -19,7 +19,7 @@ jobs:
     - name: Build
       run: |
         cargo build --release
-        Compress-Archive -Path target/release/wiresx_dashboard_companion.exe conf.toml  -Destination wiresx_dashboard_companion.zip
+        Compress-Archive -Path "target/release/wiresx_dashboard_companion.exe", "conf.toml"  -Destination wiresx_dashboard_companion.zip
     - name: Save artifact
       uses: actions/upload-artifact@v3
       with:
