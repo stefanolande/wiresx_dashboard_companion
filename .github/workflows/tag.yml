@@ -1,0 +1,27 @@
+name: Build on tags
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: |
+        cargo build --release
+        Compress-Archive -Path target/release/wiresx_dashboard_companion.exe conf.toml  -Destination wiresx_dashboard_companion.zip
+    - name: Save artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: wiresx_dashboard_companion
+        path: wiresx_dashboard_companion.zip
