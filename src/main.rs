@@ -68,6 +68,7 @@ fn main_logic() -> Result<(), Box<dyn Error>> {
         Some(5),
     );
 
+    read_csv_file(&cfg.write_log, &mut lines)?;
     loop {
         read_csv_file(&cfg.wires_x_log, &mut lines)?;
         trim_map_to_last_n(&mut lines, cfg.max_log_size);
