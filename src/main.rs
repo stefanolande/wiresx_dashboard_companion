@@ -8,6 +8,7 @@ use std::error::Error;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
+use std::path::Path;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
@@ -62,18 +63,23 @@ fn main_logic() -> Result<(), Box<dyn Error>> {
 
     println!("Wires-X Dashboard Companion started");
 
-    show_dialog(
-        "Wires-X Dashboard Companion",
-        "Starting the program in the tray bar - this message will close in 5 seconds",
-        Some(5),
-    );
+    if cfg.show_startup_message {
+        show_dialog(
+            "Wires-X Dashboard Companion",
+            "Starting the program in the tray bar - this message will close in 5 seconds",
+            Some(5),
+        );
+    }
 
-    read_csv_file(&cfg.write_log, &mut lines)?;
+    if Path::new(&cfg.write_log).exists() {
+        read_csv_file(&cfg.write_log, &mut lines)?;
+    }
+
     loop {
         read_csv_file(&cfg.wires_x_log, &mut lines)?;
         trim_map_to_last_n(&mut lines, cfg.max_log_size);
         write_csv_file(&cfg.write_log, &lines)?;
-        thread::sleep(Duration::from_secs(cfg.refres_interval as u64));
+        thread::sleep(Duration::from_secs(cfg.refresh_interval as u64));
 
         match rx.recv_timeout(Duration::from_millis(1)) {
             Ok(Message::Quit) => {
