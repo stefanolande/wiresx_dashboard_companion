@@ -1,0 +1,5 @@
+wires_x_log = "C:\\Users\\MYUSER\\Documents\\WIRESXA\\AccHistory\\WiresAccess.log"
+write_log = "C:\\Users\\MYUSER\\Documents\\WIRESXA\\AccHistory\\WiresAccess-mod.log"
+refresh_interval = 1 # seconds
+max_log_size = 50
+show_startup_message = true

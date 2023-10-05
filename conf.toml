@@ -1,5 +1,0 @@
-wires_x_log = "C:\\Users\\lande\\RustroverProjects\\wiresx_dashboard_companion\\WiresAccess.log"
-write_log = "C:\\Users\\lande\\RustroverProjects\\wiresx_dashboard_companion\\WiresAccess-mod.log"
-refresh_interval = 1 # seconds
-max_log_size = 50
-show_startup_message = true
