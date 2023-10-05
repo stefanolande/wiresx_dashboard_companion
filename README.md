@@ -1,5 +1,10 @@
 # WiresX Dashboard Companion
 
+## Download
+[Download here](https://github.com/stefanolande/wiresx_dashboard_companion/releases/latest/download/wiresx_dashboard_companion.zip)
+
+## Description
+
 ![Description](./images/description.svg)
 
 WiresX Dashboard Companion is a software that work together with a WiresX node
