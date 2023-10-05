@@ -1,9 +1,9 @@
-name: Build on tags
+name: Release
 
 on:
   push:
     tags:
-      - '*'
+      - "v*"
   workflow_dispatch:
 
 env:
@@ -21,8 +21,7 @@ jobs:
         cargo build --release
         cp conf-example.toml conf.toml
         Compress-Archive -Path "target/release/wiresx_dashboard_companion.exe", "conf.toml"  -Destination wiresx_dashboard_companion.zip
-    - name: Save artifact
-      uses: actions/upload-artifact@v3
+    - name: Release with Notes
+      uses: softprops/action-gh-release@v1
       with:
-        name: wiresx_dashboard_companion
-        path: wiresx_dashboard_companion.zip
+        files: wiresx_dashboard_companion.zip
