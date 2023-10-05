@@ -1,4 +1,7 @@
+use std::collections::BTreeMap;
 use std::error::Error;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Write};
 
 use chrono::NaiveDateTime;
 
@@ -38,5 +41,39 @@ impl Record {
             "",
         ]
         .join(sep)
+    }
+}
+pub fn read_csv_file(
+    file_path: &str,
+    lines: &mut BTreeMap<NaiveDateTime, Record>,
+) -> Result<(), Box<dyn Error>> {
+    let file = File::open(file_path).expect("Failed to open log file");
+    let reader = BufReader::new(file);
+    for line in reader.lines() {
+        let line = line?;
+        let parts: Vec<&str> = line.split('%').collect();
+        let record = Record::from(&parts)?;
+        lines.insert(record.datetime, record);
+    }
+    Ok(())
+}
+
+pub fn write_csv_file(
+    file_path: &str,
+    lines: &BTreeMap<NaiveDateTime, Record>,
+) -> Result<(), Box<dyn Error>> {
+    let mut file = File::create(file_path)?;
+    for (_, value) in lines.iter() {
+        file.write_all(value.to_string("%").as_bytes())?;
+        file.write_all(&[b'\n'])?;
+    }
+    Ok(())
+}
+
+pub fn trim_map_to_last_n(map: &mut BTreeMap<NaiveDateTime, Record>, n: usize) {
+    let excess_items = map.len().saturating_sub(n);
+    let keys_to_remove: Vec<_> = map.keys().take(excess_items).cloned().collect();
+    for key in keys_to_remove {
+        map.remove(&key);
     }
 }
