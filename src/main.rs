@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
 use std::sync::mpsc;
-use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::Duration;
 
@@ -28,6 +27,22 @@ enum Message {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let res = main_logic();
+
+    match res {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            show_dialog(
+                "Wires-X Dashboard Companion Error",
+                err.to_string().as_str(),
+                None,
+            );
+            Err(err)
+        }
+    }
+}
+
+fn main_logic() -> Result<(), Box<dyn Error>> {
     let cfg = Config::load()?;
     let mut log_map: HashMap<(String, String), Record> = HashMap::new();
 
@@ -56,26 +71,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
     }
 
-    let res = main_logic(&cfg, &mut log_map, &rx);
-
-    match res {
-        Ok(_) => Ok(()),
-        Err(err) => {
-            show_dialog(
-                "Wires-X Dashboard Companion Error",
-                err.to_string().as_str(),
-                None,
-            );
-            Err(err)
-        }
-    }
-}
-
-fn main_logic(
-    cfg: &Config,
-    mut log_map: &mut HashMap<(String, String), Record>,
-    rx: &Receiver<Message>,
-) -> Result<(), Box<dyn Error>> {
     if Path::new(&cfg.write_log).exists() {
         read_csv_file(&cfg.write_log, &mut log_map)?;
     }
