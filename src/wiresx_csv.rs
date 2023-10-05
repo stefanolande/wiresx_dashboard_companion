@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
@@ -45,7 +45,7 @@ impl Record {
 }
 pub fn read_csv_file(
     file_path: &str,
-    lines: &mut BTreeMap<NaiveDateTime, Record>,
+    log_map: &mut HashMap<(String, String), Record>,
 ) -> Result<(), Box<dyn Error>> {
     let file = File::open(file_path).expect("Failed to open log file");
     let reader = BufReader::new(file);
@@ -53,27 +53,34 @@ pub fn read_csv_file(
         let line = line?;
         let parts: Vec<&str> = line.split('%').collect();
         let record = Record::from(&parts)?;
-        lines.insert(record.datetime, record);
+        log_map.insert((record.callsign.clone(), record.serial.clone()), record);
     }
     Ok(())
 }
 
 pub fn write_csv_file(
     file_path: &str,
-    lines: &BTreeMap<NaiveDateTime, Record>,
+    log_map: &HashMap<(String, String), Record>,
 ) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(file_path)?;
-    for (_, value) in lines.iter() {
+    for (_, value) in log_map.iter() {
         file.write_all(value.to_string("%").as_bytes())?;
         file.write_all(&[b'\n'])?;
     }
     Ok(())
 }
 
-pub fn trim_map_to_last_n(map: &mut BTreeMap<NaiveDateTime, Record>, n: usize) {
-    let excess_items = map.len().saturating_sub(n);
-    let keys_to_remove: Vec<_> = map.keys().take(excess_items).cloned().collect();
+pub fn trim_map_to_last_n(log_map: &mut HashMap<(String, String), Record>, n: usize) {
+    let mut records_vec: Vec<(&(String, String), &Record)> = log_map.iter().collect();
+    records_vec.sort_by(|(_, a), (_, b)| b.datetime.cmp(&a.datetime));
+
+    let keys_to_remove: Vec<(String, String)> = records_vec
+        .iter()
+        .skip(n)
+        .map(|&(key, _)| key.clone())
+        .collect();
+
     for key in keys_to_remove {
-        map.remove(&key);
+        log_map.remove(&key);
     }
 }

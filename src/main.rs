@@ -3,7 +3,7 @@
 extern crate user32;
 extern crate winapi;
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
 use std::sync::mpsc;
@@ -11,7 +11,6 @@ use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::Duration;
 
-use chrono::NaiveDateTime;
 use tray_item::{IconSource, TrayItem};
 
 use wiresx_csv::Record;
@@ -30,7 +29,7 @@ enum Message {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cfg = Config::load()?;
-    let mut lines: BTreeMap<NaiveDateTime, Record> = BTreeMap::new();
+    let mut log_map: HashMap<(String, String), Record> = HashMap::new();
 
     let mut tray = TrayItem::new(
         "Wires-X Dashboard Companion",
@@ -57,7 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
     }
 
-    let res = main_logic(&cfg, &mut lines, &rx);
+    let res = main_logic(&cfg, &mut log_map, &rx);
 
     match res {
         Ok(_) => Ok(()),
@@ -74,17 +73,17 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn main_logic(
     cfg: &Config,
-    mut lines: &mut BTreeMap<NaiveDateTime, Record>,
+    mut log_map: &mut HashMap<(String, String), Record>,
     rx: &Receiver<Message>,
 ) -> Result<(), Box<dyn Error>> {
     if Path::new(&cfg.write_log).exists() {
-        read_csv_file(&cfg.write_log, &mut lines)?;
+        read_csv_file(&cfg.write_log, &mut log_map)?;
     }
 
     loop {
-        read_csv_file(&cfg.wires_x_log, &mut lines)?;
-        trim_map_to_last_n(&mut lines, cfg.max_log_size);
-        write_csv_file(&cfg.write_log, &lines)?;
+        read_csv_file(&cfg.wires_x_log, &mut log_map)?;
+        trim_map_to_last_n(&mut log_map, cfg.max_log_size);
+        write_csv_file(&cfg.write_log, &log_map)?;
         thread::sleep(Duration::from_secs(cfg.refresh_interval as u64));
 
         match rx.recv_timeout(Duration::from_millis(1)) {
