@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Write;
 
 use chrono::NaiveDateTime;
 
@@ -18,7 +19,7 @@ pub struct Record {
 const DATETIME_FORMAT: &'static str = "%Y/%m/%d %H:%M:%S";
 
 impl Record {
-    pub fn from(parts: &Vec<&str>) -> Option<Record> {
+    pub fn from(parts: &[&str]) -> Option<Record> {
         Some(Record {
             callsign: parts.get(0)?.parse().ok()?,
             serial: parts.get(1)?.parse().ok()?,
@@ -47,12 +48,9 @@ pub fn read_csv_file(
     file_path: &str,
     log_map: &mut HashMap<(String, String), Record>,
 ) -> Result<(), Box<dyn Error>> {
-    let mut file = File::open(file_path)?;
-    let mut buf = vec![];
-    file.read_to_end(&mut buf)?;
-    let string_file = String::from_utf8_lossy(&buf);
-    let lines: Vec<&str> = string_file.split('\n').collect();
-    for line in lines {
+    let file_content = fs::read(file_path)?;
+    let string_file = String::from_utf8_lossy(&file_content);
+    for line in string_file.lines() {
         let parts: Vec<&str> = line.split('%').collect();
         match Record::from(&parts) {
             None => (),
@@ -71,7 +69,7 @@ pub fn write_csv_file(
     let mut file = File::create(file_path)?;
     for (_, value) in log_map.iter() {
         file.write_all(value.to_string("%").as_bytes())?;
-        file.write_all(&[b'\n'])?;
+        file.write_all(b"\n")?;
     }
     Ok(())
 }
