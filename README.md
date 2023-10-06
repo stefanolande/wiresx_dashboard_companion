@@ -33,7 +33,7 @@ WiresX Dashboard Companion works as follows:
   modified log file (if you follow the previous suggestion just replace `WiresAccess.log` with `WiresAccess-mod.log`)
 - Set Windows to start this software automatically (optional)
 
-The programme does not alter the personal configurations of the WiresX Server Dashboard in any way.
+This program does not alter the personal configurations of the WiresX Server Dashboard in any way.
 In case you need to restore
 the previous display, simply close the software and edit `index.php` again by deleting
 "-mod" in order to have the log created directly read by the WiresX software.
