@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Write};
+use std::io::{Read, Write};
 
 use chrono::NaiveDateTime;
 
@@ -18,14 +18,14 @@ pub struct Record {
 const DATETIME_FORMAT: &'static str = "%Y/%m/%d %H:%M:%S";
 
 impl Record {
-    pub fn from(parts: &Vec<&str>) -> Result<Record, Box<dyn Error>> {
-        Ok(Record {
-            callsign: parts[0].parse().unwrap(),
-            serial: parts[1].parse().unwrap(),
-            name: parts[2].parse().unwrap(),
-            datetime: NaiveDateTime::parse_from_str(parts[3], "%Y/%m/%d %H:%M:%S")?,
-            port: parts[4].parse().unwrap(),
-            location: parts[6].parse().unwrap(),
+    pub fn from(parts: &Vec<&str>) -> Option<Record> {
+        Some(Record {
+            callsign: parts.get(0)?.parse().ok()?,
+            serial: parts.get(1)?.parse().ok()?,
+            name: parts.get(2)?.parse().ok()?,
+            datetime: NaiveDateTime::parse_from_str(parts.get(3)?, "%Y/%m/%d %H:%M:%S").ok()?,
+            port: parts.get(4)?.parse().ok()?,
+            location: parts.get(6)?.parse().ok()?,
         })
     }
 
@@ -47,13 +47,19 @@ pub fn read_csv_file(
     file_path: &str,
     log_map: &mut HashMap<(String, String), Record>,
 ) -> Result<(), Box<dyn Error>> {
-    let file = File::open(file_path)?;
-    let reader = BufReader::new(file);
-    for line in reader.lines() {
-        let line = line?;
+    let mut file = File::open(file_path)?;
+    let mut buf = vec![];
+    file.read_to_end(&mut buf)?;
+    let string_file = String::from_utf8_lossy(&buf);
+    let lines: Vec<&str> = string_file.split('\n').collect();
+    for line in lines {
         let parts: Vec<&str> = line.split('%').collect();
-        let record = Record::from(&parts)?;
-        log_map.insert((record.callsign.clone(), record.serial.clone()), record);
+        match Record::from(&parts) {
+            None => (),
+            Some(record) => {
+                log_map.insert((record.callsign.clone(), record.serial.clone()), record);
+            }
+        }
     }
     Ok(())
 }
