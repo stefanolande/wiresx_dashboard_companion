@@ -47,7 +47,7 @@ pub fn read_csv_file(
     file_path: &str,
     log_map: &mut HashMap<(String, String), Record>,
 ) -> Result<(), Box<dyn Error>> {
-    let file = File::open(file_path).expect("Failed to open log file");
+    let file = File::open(file_path)?;
     let reader = BufReader::new(file);
     for line in reader.lines() {
         let line = line?;
