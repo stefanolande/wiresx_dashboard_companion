@@ -5,10 +5,11 @@ extern crate winapi;
 
 use std::collections::HashMap;
 use std::error::Error;
+use std::io::ErrorKind;
 use std::path::Path;
 use std::sync::mpsc;
-use std::thread;
 use std::time::Duration;
+use std::{io, thread};
 
 use tray_item::{IconSource, TrayItem};
 
@@ -25,6 +26,7 @@ mod wiresx_csv;
 enum Message {
     Quit,
 }
+const RETRY_ATTEMPTS: usize = 10;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let res = main_logic();
@@ -45,6 +47,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn main_logic() -> Result<(), Box<dyn Error>> {
     let cfg = Config::load()?;
     let mut log_map: HashMap<(String, String), Record> = HashMap::new();
+
+    if !Path::new(&cfg.wires_x_log).exists() {
+        return Err(Box::new(io::Error::new(
+            ErrorKind::NotFound,
+            format!("WiresX log not found in path {}", cfg.wires_x_log),
+        )));
+    }
 
     let mut tray = TrayItem::new(
         "Wires-X Dashboard Companion",
@@ -72,11 +81,11 @@ fn main_logic() -> Result<(), Box<dyn Error>> {
     }
 
     if Path::new(&cfg.write_log).exists() {
-        read_csv_file(&cfg.write_log, &mut log_map)?;
+        read_csv_file(&cfg.write_log, &mut log_map, RETRY_ATTEMPTS)?;
     }
 
     loop {
-        read_csv_file(&cfg.wires_x_log, &mut log_map)?;
+        read_csv_file(&cfg.wires_x_log, &mut log_map, RETRY_ATTEMPTS)?;
         trim_map_to_last_n(&mut log_map, cfg.max_log_size);
         write_csv_file(&cfg.write_log, &log_map)?;
         thread::sleep(Duration::from_secs(cfg.refresh_interval as u64));
