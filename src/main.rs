@@ -87,7 +87,7 @@ fn main_logic() -> Result<(), Box<dyn Error>> {
     loop {
         read_csv_file(&cfg.wires_x_log, &mut log_map, RETRY_ATTEMPTS)?;
         trim_map_to_last_n(&mut log_map, cfg.max_log_size);
-        write_csv_file(&cfg.write_log, &log_map)?;
+        write_csv_file(&cfg.write_log, &log_map, RETRY_ATTEMPTS)?;
         thread::sleep(Duration::from_secs(cfg.refresh_interval as u64));
 
         match rx.recv_timeout(Duration::from_millis(1)) {
