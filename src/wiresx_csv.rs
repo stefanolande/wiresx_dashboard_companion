@@ -79,7 +79,7 @@ fn read_csv_file_internal(
 
 pub fn write_csv_file(
     file_path: &str,
-    log_map: &mut HashMap<(String, String), Record>,
+    log_map: &HashMap<(String, String), Record>,
     retries: usize,
 ) -> Result<(), Box<dyn Error>> {
     for _ in 0..retries - 1 {
