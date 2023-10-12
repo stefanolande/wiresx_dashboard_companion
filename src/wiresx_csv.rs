@@ -79,6 +79,20 @@ fn read_csv_file_internal(
 
 pub fn write_csv_file(
     file_path: &str,
+    log_map: &mut HashMap<(String, String), Record>,
+    retries: usize,
+) -> Result<(), Box<dyn Error>> {
+    for _ in 0..retries - 1 {
+        let result = write_csv_file_internal(file_path, log_map);
+        if result.is_ok() {
+            return result;
+        }
+    }
+
+    read_csv_file_internal(file_path, log_map)
+}
+fn write_csv_file_internal(
+    file_path: &str,
     log_map: &HashMap<(String, String), Record>,
 ) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(file_path)?;
