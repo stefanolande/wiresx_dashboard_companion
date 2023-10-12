@@ -89,7 +89,7 @@ pub fn write_csv_file(
         }
     }
 
-    read_csv_file_internal(file_path, log_map)
+    write_csv_file_internal(file_path, log_map)
 }
 fn write_csv_file_internal(
     file_path: &str,
