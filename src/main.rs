@@ -16,10 +16,12 @@ use tray_item::{IconSource, TrayItem};
 use wiresx_csv::Record;
 
 use crate::conf::Config;
+use crate::error_log::write_error;
 use crate::windows::show_dialog;
 use crate::wiresx_csv::{read_csv_file, trim_map_to_last_n, write_csv_file};
 
 mod conf;
+mod error_log;
 mod windows;
 mod wiresx_csv;
 
@@ -34,11 +36,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     match res {
         Ok(_) => Ok(()),
         Err(err) => {
-            show_dialog(
-                "Wires-X Dashboard Companion Error",
-                err.to_string().as_str(),
-                None,
-            );
+            write_error(&err)?;
             Err(err)
         }
     }
@@ -49,10 +47,10 @@ fn main_logic() -> Result<(), Box<dyn Error>> {
     let mut log_map: HashMap<(String, String), Record> = HashMap::new();
 
     if !Path::new(&cfg.wires_x_log).exists() {
-        return Err(Box::new(io::Error::new(
-            ErrorKind::NotFound,
-            format!("WiresX log not found in path {}", cfg.wires_x_log),
-        )));
+        let message = format!("WiresX log not found in path {}", cfg.wires_x_log);
+
+        show_dialog("Wires-X Dashboard Companion Error", &message, None);
+        return Err(Box::new(io::Error::new(ErrorKind::NotFound, message)));
     }
 
     let mut tray = TrayItem::new(

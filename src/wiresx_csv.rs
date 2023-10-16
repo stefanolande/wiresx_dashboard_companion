@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::time::Duration;
+use std::{fs, thread};
 
 use chrono::NaiveDateTime;
 
@@ -54,6 +55,8 @@ pub fn read_csv_file(
         let result = read_csv_file_internal(file_path, log_map);
         if result.is_ok() {
             return result;
+        } else {
+            thread::sleep(Duration::from_millis(100));
         }
     }
 
@@ -86,6 +89,8 @@ pub fn write_csv_file(
         let result = write_csv_file_internal(file_path, log_map);
         if result.is_ok() {
             return result;
+        } else {
+            thread::sleep(Duration::from_millis(100));
         }
     }
 
