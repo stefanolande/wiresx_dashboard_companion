@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::time::Duration;
+use std::{fs, thread};
 
 use chrono::NaiveDateTime;
 
@@ -44,7 +45,24 @@ impl Record {
         .join(sep)
     }
 }
+
 pub fn read_csv_file(
+    file_path: &str,
+    log_map: &mut HashMap<(String, String), Record>,
+    retries: usize,
+) -> Result<(), Box<dyn Error>> {
+    for _ in 0..retries - 1 {
+        let result = read_csv_file_internal(file_path, log_map);
+        if result.is_ok() {
+            return result;
+        } else {
+            thread::sleep(Duration::from_millis(100));
+        }
+    }
+
+    read_csv_file_internal(file_path, log_map)
+}
+fn read_csv_file_internal(
     file_path: &str,
     log_map: &mut HashMap<(String, String), Record>,
 ) -> Result<(), Box<dyn Error>> {
@@ -63,6 +81,22 @@ pub fn read_csv_file(
 }
 
 pub fn write_csv_file(
+    file_path: &str,
+    log_map: &HashMap<(String, String), Record>,
+    retries: usize,
+) -> Result<(), Box<dyn Error>> {
+    for _ in 0..retries - 1 {
+        let result = write_csv_file_internal(file_path, log_map);
+        if result.is_ok() {
+            return result;
+        } else {
+            thread::sleep(Duration::from_millis(100));
+        }
+    }
+
+    write_csv_file_internal(file_path, log_map)
+}
+fn write_csv_file_internal(
     file_path: &str,
     log_map: &HashMap<(String, String), Record>,
 ) -> Result<(), Box<dyn Error>> {
